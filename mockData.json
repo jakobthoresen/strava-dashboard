@@ -1,0 +1,50 @@
+[
+  {
+    "id": "1",
+    "name": "Rolig søndagstur i Sone 2",
+    "type": "Run",
+    "distance_meters": 10200,
+    "moving_time_secs": 3420,
+    "start_date": "2026-05-31T10:15:00Z",
+    "average_heartrate": 138,
+    "zones_seconds": {
+      "zone1": 420,
+      "zone2": 2800,
+      "zone3": 200,
+      "zone4": 0,
+      "zone5": 0
+    }
+  },
+  {
+    "id": "2",
+    "name": "Tung bakkeintervall",
+    "type": "Run",
+    "distance_meters": 6500,
+    "moving_time_secs": 2100,
+    "start_date": "2026-05-28T17:30:00Z",
+    "average_heartrate": 165,
+    "zones_seconds": {
+      "zone1": 180,
+      "zone2": 300,
+      "zone3": 620,
+      "zone4": 800,
+      "zone5": 200
+    }
+  },
+  {
+    "id": "3",
+    "name": "Kjapp 5km etter jobb",
+    "type": "Run",
+    "distance_meters": 5000,
+    "moving_time_secs": 1450,
+    "start_date": "2026-05-26T16:00:00Z",
+    "average_heartrate": 152,
+    "zones_seconds": {
+      "zone1": 100,
+      "zone2": 250,
+      "zone3": 900,
+      "zone4": 200,
+      "zone5": 0
+    }
+  }
+]
