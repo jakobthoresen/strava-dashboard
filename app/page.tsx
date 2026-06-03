@@ -1,110 +1,159 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import mockActivities from '../mockData.json';
+import { useState } from 'react'
+import { mockActivities } from '@/lib/mockData'
+import {
+  getRuns, getTotalDistance, getAvgPace,
+  getAvgHeartrate, getWeeklyDistanceData, getHRZoneData,
+} from '@/lib/activityHelpers'
+import { formatDistance, formatPace } from '@/lib/utils'
+import { ThemeToggle } from '@/components/layout/themeToggle'
+import { WeeklyDistanceChart } from '@/components/charts/weeklyDistanceChart'
+import { HRZonesChart } from '@/components/charts/HRZonesChart'
 
 export default function Home() {
-  const [showDemo, setShowDemo] = useState(false);
+  const [showDemo, setShowDemo] = useState(false)
 
-  // Enkle utregninger basert på mock-dataene
-  const totalMeters = mockActivities.reduce((acc, act) => acc + act.distance_meters, 0);
-  const totalKm = (totalMeters / 1000).toFixed(1);
-  const totalWorkouts = mockActivities.length;
+  const runs          = getRuns(mockActivities)
+  const totalDistance = formatDistance(getTotalDistance(runs))
+  const avgPace       = formatPace(getAvgPace(runs))
+  const avgHR         = getAvgHeartrate(runs)
+  const weeklyData    = getWeeklyDistanceData(runs)
+  const hrZoneData    = getHRZoneData(runs)
 
-  // Hjelpefunksjon for å gjøre sekunder om til minutter/sekunder-tempo
-  const calculateAveragePace = () => {
-    const totalSeconds = mockActivities.reduce((acc, act) => acc + act.moving_time_secs, 0);
-    const totalKmNum = totalMeters / 1000;
-    const paceSecondsPerKm = totalSeconds / totalKmNum;
-    const minutes = Math.floor(paceSecondsPerKm / 60);
-    const seconds = Math.floor(paceSecondsPerKm % 60);
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds} min/km`;
-  };
+  const stats = [
+    { label: 'Total distanse',  value: totalDistance,    sub: 'akkumulert'   },
+    { label: 'Løpeturer',       value: runs.length,      sub: 'registrerte'  },
+    { label: 'Snittempo',       value: avgPace,          sub: 'per kilometer'},
+    { label: 'Snittpuls',       value: `${avgHR} bpm`,   sub: 'gjennomsnitt' },
+  ]
 
-  // HVIS DEMO ER AKTIV: Vis et enkelt dashboard
   if (showDemo) {
     return (
-      <main className="min-h-screen bg-slate-900 text-slate-100 p-8">
-        <div className="max-w-5xl mx-auto">
-          <div className="flex justify-between items-center mb-8 border-b border-slate-800 pb-4">
-            <h1 className="text-2xl font-bold tracking-tight text-orange-500">🏃‍♂️ MinLøpeData // DEMO</h1>
-            <button 
-              onClick={() => setShowDemo(false)}
-              className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg transition"
-            >
-              Tilbake til forsiden
-            </button>
-          </div>
+      <div className="min-h-screen bg-slate-50 dark:bg-[#080C14] text-slate-900 dark:text-slate-100">
 
-          {/* KPI BOKSER */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
-              <p className="text-sm text-slate-400 font-medium">Distanse (mai)</p>
-              <p className="text-3xl font-bold mt-1 text-white">{totalKm} km</p>
+        <header className="sticky top-0 z-10 border-b border-slate-200 dark:border-white/[0.06] bg-slate-50/80 dark:bg-[#080C14]/80 backdrop-blur px-6 py-3.5">
+          <div className="max-w-5xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowDemo(false)}
+                className="text-xs text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+              >
+                ← Tilbake
+              </button>
+              <div className="w-px h-4 bg-slate-200 dark:bg-white/10" />
+              <span className="text-sm font-semibold">Løpedashbord</span>
+              <span className="text-xs px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-500 dark:text-blue-400 border border-blue-500/20 font-medium">
+                DEMO
+              </span>
             </div>
-            <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
-              <p className="text-sm text-slate-400 font-medium">Antall økter</p>
-              <p className="text-3xl font-bold mt-1 text-white">{totalWorkouts}</p>
-            </div>
-            <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
-              <p className="text-sm text-slate-400 font-medium">Snittfart</p>
-              <p className="text-3xl font-bold mt-1 text-white">{calculateAveragePace()}</p>
-            </div>
+            <ThemeToggle />
           </div>
+        </header>
 
-          {/* LISTE OVER ØKTER */}
-          <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
-            <h2 className="text-lg font-semibold mb-4 text-white">Siste aktiviteter</h2>
-            <div className="space-y-3">
-              {mockActivities.map((activity) => (
-                <div key={activity.id} className="flex justify-between items-center p-4 bg-slate-900/50 rounded-lg border border-slate-800">
+        <main className="max-w-5xl mx-auto px-6 py-8 space-y-5">
+
+          {/* Statistikkort */}
+          <section className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {stats.map((s, i) => (
+              <div key={i} className="bg-white dark:bg-[#0F1629] rounded-xl border border-slate-200 dark:border-white/[0.06] p-5">
+                <p className="text-xs uppercase tracking-wider font-medium text-slate-400 dark:text-slate-500 mb-3">
+                  {s.label}
+                </p>
+                <p className="text-2xl font-bold font-mono tracking-tight">{s.value}</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{s.sub}</p>
+              </div>
+            ))}
+          </section>
+
+          {/* Grafer */}
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white dark:bg-[#0F1629] rounded-xl border border-slate-200 dark:border-white/[0.06] p-5">
+              <p className="text-xs uppercase tracking-wider font-medium text-slate-400 dark:text-slate-500 mb-4">
+                Ukentlig distanse
+              </p>
+              <WeeklyDistanceChart data={weeklyData} />
+            </div>
+            <div className="bg-white dark:bg-[#0F1629] rounded-xl border border-slate-200 dark:border-white/[0.06] p-5">
+              <p className="text-xs uppercase tracking-wider font-medium text-slate-400 dark:text-slate-500 mb-4">
+                Pulssoner
+              </p>
+              <HRZonesChart data={hrZoneData} />
+            </div>
+          </section>
+
+          {/* Aktivitetsliste */}
+          <section className="bg-white dark:bg-[#0F1629] rounded-xl border border-slate-200 dark:border-white/[0.06] overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.04]">
+              <p className="text-xs uppercase tracking-wider font-medium text-slate-400 dark:text-slate-500">
+                Siste aktiviteter
+              </p>
+            </div>
+            <div className="divide-y divide-slate-100 dark:divide-white/[0.04]">
+              {runs.map((activity) => (
+                <div
+                  key={activity.id}
+                  className="flex justify-between items-center px-5 py-3.5 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors"
+                >
                   <div>
-                    <p className="font-semibold text-slate-200">{activity.name}</p>
-                    <p className="text-xs text-slate-500">{new Date(activity.start_date).toLocaleDateString('no-NO')}</p>
+                    <p className="text-sm font-medium">{activity.name}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                      {new Date(activity.start_date).toLocaleDateString('no-NO', {
+                        weekday: 'short', day: 'numeric', month: 'short',
+                      })}
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-orange-400">{(activity.distance_meters / 1000).toFixed(2)} km</p>
-                    <p className="text-xs text-slate-400">{Math.floor(activity.moving_time_secs / 60)} min</p>
+                    <p className="text-sm font-mono font-semibold text-blue-600 dark:text-blue-400">
+                      {formatDistance(activity.distance)}
+                    </p>
+                    <p className="text-xs font-mono text-slate-400 dark:text-slate-500 mt-0.5">
+                      {formatPace(activity.average_pace)}
+                    </p>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      </main>
-    );
+          </section>
+
+        </main>
+      </div>
+    )
   }
 
-  // LANDING PAGE (Standard visning)
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center p-4">
-      <div className="max-w-md w-full text-center space-y-6">
-        <div className="inline-flex p-3 bg-orange-500/10 rounded-2xl text-orange-500 text-3xl mb-2">
-          🏃‍♂️
+  <div className="min-h-screen bg-background text-foreground transition-colors duration-200 flex flex-col">
+    <div className="flex justify-end p-6 z-10">
+      <ThemeToggle />
+    </div>
+    <div className="flex-1 flex flex-col items-center justify-center px-4">
+      <div className="max-w-xs w-full text-center space-y-8">
+        <div className="space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            Personlig statistikk
+          </p>
+          <h1 className="text-3xl font-bold tracking-tight">Løpedashbord</h1>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Analyser løpeøktene dine med pulssoner, tempodata og ukentlig progresjon.
+          </p>
         </div>
-        <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl bg-gradient-to-r from-orange-400 to-amber-500 bg-clip-text text-transparent">
-          Uoffisielt Strava Dashboard
-        </h1>
-        <p className="text-base text-slate-400">
-          Få dypere innsikt i pulssonene dine, treningsfrekvens og progresjon over tid. Helt uten abonnementsavgifter.
-        </p>
-        
-        <div className="pt-4 space-y-3">
-          <button 
-            disabled 
-            className="w-full bg-orange-600 opacity-50 cursor-not-allowed text-white font-semibold py-3 px-4 rounded-xl transition shadow-lg shadow-orange-600/20"
+        <div className="space-y-2.5">
+          <button
+            disabled
+            className="w-full py-2.5 px-4 rounded-xl border border-border text-sm font-medium text-muted-foreground cursor-not-allowed flex items-center justify-center gap-2"
           >
-            Koble til Strava (Kommer snart)
+            Koble til Strava
+            <span className="text-xs bg-muted px-1.5 py-0.5 rounded">Snart</span>
           </button>
-          
-          <button 
+          <button
             onClick={() => setShowDemo(true)}
-            className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium py-3 px-4 rounded-xl border border-slate-700 transition"
+            className="w-full py-2.5 px-4 rounded-xl bg-foreground text-background text-sm font-semibold hover:opacity-90 transition-opacity"
           >
-            Se Demomodus
+            Se demo
           </button>
         </div>
       </div>
-    </main>
-  );
+    </div>
+  </div>
+)
 }
