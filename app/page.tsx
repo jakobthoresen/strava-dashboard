@@ -5,13 +5,14 @@ import { mockActivities } from '@/lib/mockData'
 import {
   getRuns, getTotalDistance, getAvgPace,
   getAvgHeartrate, getWeeklyDistanceData, getHRZoneData,
-  getMonthlyRuns, getLongestRun, getEasyAvgHR, 
+  getMonthlyRuns, getLongestRun, getEasyAvgHR, getLatestActivity,
 } from '@/lib/activityHelpers'
 import { formatDistance, formatPace } from '@/lib/utils'
 import { ThemeToggle } from '@/components/layout/themeToggle'
 import { WeeklyDistanceChart } from '@/components/charts/weeklyDistanceChart'
 import { HRZonesChart } from '@/components/charts/HRZonesChart'
 import { ActivityDetail } from '@/components/ActivityDetail'
+import { LastActivityCard } from '@/components/LastActivityCard'
 import { StravaActivity } from '@/types/activity'
 
 export default function Home() {
@@ -24,6 +25,7 @@ export default function Home() {
   const hrZoneData     = getHRZoneData(runs)
   const easyHR         = getEasyAvgHR(runs)
   const overallHR      = getAvgHeartrate(runs)
+  const latestActivity = getLatestActivity(runs)
 
   const stats = [
     {
@@ -81,6 +83,7 @@ export default function Home() {
 
         <main className="max-w-5xl mx-auto px-6 py-8 space-y-5">
 
+          {/* Statistikkort */}
           <section className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {stats.map((s, i) => (
               <div key={i} className="bg-white dark:bg-[#0F1629] rounded-xl border border-slate-200 dark:border-white/[0.06] p-5">
@@ -99,6 +102,7 @@ export default function Home() {
             ))}
           </section>
 
+          {/* Grafer */}
           <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-white dark:bg-[#0F1629] rounded-xl border border-slate-200 dark:border-white/[0.06] p-5">
               <p className="text-xs uppercase tracking-wider font-medium text-slate-400 dark:text-slate-500 mb-4">
@@ -114,6 +118,12 @@ export default function Home() {
             </div>
           </section>
 
+          {/* Siste økt med kart */}
+          {latestActivity && (
+            <LastActivityCard activity={latestActivity} />
+          )}
+
+          {/* Aktivitetsliste */}
           <section className="bg-white dark:bg-[#0F1629] rounded-xl border border-slate-200 dark:border-white/[0.06] overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.04]">
               <p className="text-xs uppercase tracking-wider font-medium text-slate-400 dark:text-slate-500">

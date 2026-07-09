@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import polyline from '@mapbox/polyline'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -19,4 +20,8 @@ export function formatPace(secondsPerKm: number): string {
   const mins = Math.floor(secondsPerKm / 60)
   const secs = secondsPerKm % 60
   return `${mins}:${secs.toString().padStart(2, "0")} /km`
+}
+
+export function decodePolyline(encoded: string): [number, number][] {
+  return polyline.decode(encoded) as [number, number][]
 }

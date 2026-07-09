@@ -24,15 +24,15 @@ export function ActivityDetail({ activity, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+      className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center"
       onClick={onClose}
     >
       {/* Bakgrunnsdimming */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-[1000]" />
 
       {/* Panel */}
       <div
-        className="relative z-10 w-full sm:max-w-lg bg-white dark:bg-[#0F1629] border border-slate-200 dark:border-white/[0.06] rounded-t-2xl sm:rounded-2xl shadow-xl max-h-[85vh] overflow-y-auto"
+        className="relative z-[1000] w-full sm:max-w-lg bg-white dark:bg-[#0F1629] border border-slate-200 dark:border-white/[0.06] rounded-t-2xl sm:rounded-2xl shadow-xl max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
