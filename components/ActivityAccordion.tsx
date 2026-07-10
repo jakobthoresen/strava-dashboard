@@ -1,8 +1,20 @@
 'use client'
 
+import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { StravaActivity } from '@/types/activity'
-import { formatDistance, formatPace, formatDuration } from '@/lib/utils'
-import { X } from 'lucide-react'
+import { formatDistance, formatPace, formatDuration, decodePolyline } from '@/lib/utils'
+import { ChevronUp, ChevronDown } from 'lucide-react'
+
+const RouteMap = dynamic(
+  () => import('@/components/charts/RouteMap').then((m) => m.RouteMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-60 rounded-lg bg-slate-100 dark:bg-white/[0.03] animate-pulse" />
+    ),
+  }
+)
 
 function getHRZone(hr: number): { zone: string; color: string } {
   if (hr < 130) return { zone: 'Sone 1', color: 'text-blue-400' }
@@ -12,48 +24,52 @@ function getHRZone(hr: number): { zone: string; color: string } {
   return { zone: 'Sone 5', color: 'text-red-400' }
 }
 
-interface Props {
+function ActivityRow({ activity, isExpanded, onToggle }: {
   activity: StravaActivity
-  onClose: () => void
-}
-
-export function ActivityDetail({ activity, onClose }: Props) {
+  isExpanded: boolean
+  onToggle: () => void
+}) {
   const hrZone = activity.average_heartrate
     ? getHRZone(activity.average_heartrate)
     : null
 
-  return (
-    <div
-      className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center"
-      onClick={onClose}
-    >
-      {/* Bakgrunnsdimming */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-[1000]" />
+  const coordinates = activity.coordinates
+    ?? (activity.summary_polyline ? decodePolyline(activity.summary_polyline) : null)
 
-      {/* Panel */}
+  return (
+    <div className="border-b border-slate-100 dark:border-white/[0.04] last:border-0">
+
+      {/* Header – alltid synlig */}
       <div
-        className="relative z-[1000] w-full sm:max-w-lg bg-white dark:bg-[#0F1629] border border-slate-200 dark:border-white/[0.06] rounded-t-2xl sm:rounded-2xl shadow-xl max-h-[85vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
+        onClick={onToggle}
+        className="flex justify-between items-center px-5 py-3.5 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors cursor-pointer"
       >
-        {/* Header */}
-        <div className="flex items-start justify-between px-5 py-4 border-b border-slate-100 dark:border-white/[0.04] sticky top-0 bg-white dark:bg-[#0F1629]">
-          <div>
-            <p className="text-sm font-semibold">{activity.name}</p>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-              {new Date(activity.start_date).toLocaleDateString('no-NO', {
-                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-              })}
+        <div>
+          <p className="text-sm font-medium">{activity.name}</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+            {new Date(activity.start_date).toLocaleDateString('no-NO', {
+              weekday: 'short', day: 'numeric', month: 'short',
+            })}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <p className="text-sm font-mono font-semibold text-blue-600 dark:text-blue-400">
+              {formatDistance(activity.distance)}
+            </p>
+            <p className="text-xs font-mono text-slate-400 dark:text-slate-500 mt-0.5">
+              {formatPace(activity.average_pace)}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors ml-4 shrink-0"
-          >
-            <X size={18} />
-          </button>
+          <div className="text-slate-400 dark:text-slate-500 shrink-0">
+            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </div>
         </div>
+      </div>
 
-        <div className="px-5 py-4 space-y-5">
+      {/* Expanded innhold */}
+      {isExpanded && (
+        <div className="px-5 pb-5 space-y-4">
 
           {/* Nøkkeltall */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -99,7 +115,17 @@ export function ActivityDetail({ activity, onClose }: Props) {
             </div>
           )}
 
-          {/* Splits-tabell */}
+          {/* Kart */}
+          {coordinates && coordinates.length > 0 && (
+            <div>
+              <p className="text-xs uppercase tracking-wider font-medium text-slate-400 dark:text-slate-500 mb-2">
+                Løype
+              </p>
+              <RouteMap coordinates={coordinates} />
+            </div>
+          )}
+
+          {/* Splits */}
           {activity.splits && activity.splits.length > 0 && (
             <div>
               <p className="text-xs uppercase tracking-wider font-medium text-slate-400 dark:text-slate-500 mb-2">
@@ -144,14 +170,40 @@ export function ActivityDetail({ activity, onClose }: Props) {
             </div>
           )}
 
-          {!activity.splits && (
-            <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-2">
-              Ingen split-data tilgjengelig for denne økten
-            </p>
-          )}
-
         </div>
-      </div>
+      )}
     </div>
+  )
+}
+
+interface Props {
+  activities: StravaActivity[]
+}
+
+export function ActivityAccordion({ activities }: Props) {
+  const [expandedId, setExpandedId] = useState<number | null>(
+    activities.length > 0 ? activities[0].id : null
+  )
+
+  return (
+    <section className="bg-white dark:bg-[#0F1629] rounded-xl border border-slate-200 dark:border-white/[0.06] overflow-hidden">
+      <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.04]">
+        <p className="text-xs uppercase tracking-wider font-medium text-slate-400 dark:text-slate-500">
+          Siste aktiviteter
+        </p>
+      </div>
+      <div>
+        {activities.map((activity) => (
+          <ActivityRow
+            key={activity.id}
+            activity={activity}
+            isExpanded={expandedId === activity.id}
+            onToggle={() =>
+              setExpandedId(expandedId === activity.id ? null : activity.id)
+            }
+          />
+        ))}
+      </div>
+    </section>
   )
 }

@@ -167,6 +167,15 @@ export const mockActivities: StravaActivity[] = [
     type: "Run",
     total_elevation_gain: 92,
     calories: 536,
+    splits: [
+    { km: 1, pace: 372, average_heartrate: 132, elevation_change: 8 },
+    { km: 2, pace: 365, average_heartrate: 136, elevation_change: 15 },
+    { km: 3, pace: 358, average_heartrate: 139, elevation_change: 22 },
+    { km: 4, pace: 355, average_heartrate: 141, elevation_change: 18 },
+    { km: 5, pace: 360, average_heartrate: 140, elevation_change: 12 },
+    { km: 6, pace: 352, average_heartrate: 143, elevation_change: 10 },
+    { km: 7, pace: 348, average_heartrate: 144, elevation_change: 7 },
+    ],
     coordinates: [
       [60.3975, 5.3150],
       [60.3968, 5.3132],

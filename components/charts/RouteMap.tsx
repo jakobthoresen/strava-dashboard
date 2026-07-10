@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { MapContainer, TileLayer, Polyline, useMap } from 'react-leaflet'
+import { useTheme } from 'next-themes'
 import 'leaflet/dist/leaflet.css'
 
 interface Props {
@@ -19,7 +20,15 @@ function FitBounds({ coordinates }: { coordinates: [number, number][] }) {
 }
 
 export function RouteMap({ coordinates }: Props) {
+  const [mounted, setMounted] = useState(false)
+  const { resolvedTheme } = useTheme()
+  useEffect(() => setMounted(true), [])
+
   const center = coordinates[0] ?? [60.3913, 5.3221]
+
+  const tileUrl = !mounted || resolvedTheme === 'dark'
+    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
 
   return (
     <MapContainer
@@ -29,9 +38,7 @@ export function RouteMap({ coordinates }: Props) {
       zoomControl={false}
       attributionControl={false}
     >
-      <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-      />
+      <TileLayer url={tileUrl} />
       <Polyline
         positions={coordinates}
         color="#3b82f6"

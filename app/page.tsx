@@ -3,29 +3,25 @@
 import { useState } from 'react'
 import { mockActivities } from '@/lib/mockData'
 import {
-  getRuns, getTotalDistance, getAvgPace,
+  getRuns, getTotalDistance,
   getAvgHeartrate, getWeeklyDistanceData, getHRZoneData,
-  getMonthlyRuns, getLongestRun, getEasyAvgHR, getLatestActivity,
+  getMonthlyRuns, getLongestRun, getEasyAvgHR,
 } from '@/lib/activityHelpers'
 import { formatDistance, formatPace } from '@/lib/utils'
 import { ThemeToggle } from '@/components/layout/themeToggle'
 import { WeeklyDistanceChart } from '@/components/charts/weeklyDistanceChart'
 import { HRZonesChart } from '@/components/charts/HRZonesChart'
-import { ActivityDetail } from '@/components/ActivityDetail'
-import { LastActivityCard } from '@/components/LastActivityCard'
-import { StravaActivity } from '@/types/activity'
+import { ActivityAccordion } from '@/components/ActivityAccordion'
 
 export default function Home() {
   const [showDemo, setShowDemo] = useState(false)
-  const [selectedActivity, setSelectedActivity] = useState<StravaActivity | null>(null)
 
-  const runs           = getRuns(mockActivities)
-  const monthlyRuns    = getMonthlyRuns(runs)
-  const weeklyData     = getWeeklyDistanceData(runs)
-  const hrZoneData     = getHRZoneData(runs)
-  const easyHR         = getEasyAvgHR(runs)
-  const overallHR      = getAvgHeartrate(runs)
-  const latestActivity = getLatestActivity(runs)
+  const runs        = getRuns(mockActivities)
+  const monthlyRuns = getMonthlyRuns(runs)
+  const weeklyData  = getWeeklyDistanceData(runs)
+  const hrZoneData  = getHRZoneData(runs)
+  const easyHR      = getEasyAvgHR(runs)
+  const overallHR   = getAvgHeartrate(runs)
 
   const stats = [
     {
@@ -83,7 +79,6 @@ export default function Home() {
 
         <main className="max-w-5xl mx-auto px-6 py-8 space-y-5">
 
-          {/* Statistikkort */}
           <section className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {stats.map((s, i) => (
               <div key={i} className="bg-white dark:bg-[#0F1629] rounded-xl border border-slate-200 dark:border-white/[0.06] p-5">
@@ -102,7 +97,6 @@ export default function Home() {
             ))}
           </section>
 
-          {/* Grafer */}
           <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-white dark:bg-[#0F1629] rounded-xl border border-slate-200 dark:border-white/[0.06] p-5">
               <p className="text-xs uppercase tracking-wider font-medium text-slate-400 dark:text-slate-500 mb-4">
@@ -118,55 +112,9 @@ export default function Home() {
             </div>
           </section>
 
-          {/* Siste økt med kart */}
-          {latestActivity && (
-            <LastActivityCard activity={latestActivity} />
-          )}
-
-          {/* Aktivitetsliste */}
-          <section className="bg-white dark:bg-[#0F1629] rounded-xl border border-slate-200 dark:border-white/[0.06] overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 dark:border-white/[0.04]">
-              <p className="text-xs uppercase tracking-wider font-medium text-slate-400 dark:text-slate-500">
-                Siste aktiviteter
-              </p>
-            </div>
-            <div className="divide-y divide-slate-100 dark:divide-white/[0.04]">
-              {runs.map((activity) => (
-                <div
-                  key={activity.id}
-                  onClick={() => setSelectedActivity(activity)}
-                  className="flex justify-between items-center px-5 py-3.5 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors cursor-pointer"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{activity.name}</p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                      {new Date(activity.start_date).toLocaleDateString('no-NO', {
-                        weekday: 'short', day: 'numeric', month: 'short',
-                      })}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-mono font-semibold text-blue-600 dark:text-blue-400">
-                      {formatDistance(activity.distance)}
-                    </p>
-                    <p className="text-xs font-mono text-slate-400 dark:text-slate-500 mt-0.5">
-                      {formatPace(activity.average_pace)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+          <ActivityAccordion activities={runs} />
 
         </main>
-
-        {selectedActivity && (
-          <ActivityDetail
-            activity={selectedActivity}
-            onClose={() => setSelectedActivity(null)}
-          />
-        )}
-
       </div>
     )
   }
