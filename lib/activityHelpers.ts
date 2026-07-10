@@ -1,7 +1,9 @@
 import { StravaActivity } from "@/types/activity"
 
 export function getRuns(activities: StravaActivity[]): StravaActivity[] {
-  return activities.filter((a) => a.type === "Run")
+  return activities
+    .filter((a) => a.type === "Run")
+    .sort((a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime())
 }
 
 export function getTotalDistance(activities: StravaActivity[]): number {
@@ -148,4 +150,11 @@ export function getHeatmapData(activities: StravaActivity[]): HeatmapDay[] {
   }
 
   return days
+}
+
+export function getLatestActivity(activities: StravaActivity[]): StravaActivity | null {
+  if (activities.length === 0) return null
+  return activities.sort(
+    (a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
+  )[0]
 }
