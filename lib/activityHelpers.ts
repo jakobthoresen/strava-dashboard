@@ -158,3 +158,91 @@ export function getLatestActivity(activities: StravaActivity[]): StravaActivity 
     (a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
   )[0]
 }
+
+export interface PersonalRecord {
+  label: string
+  value: string
+  activityName: string
+  date: string
+  icon: string
+}
+
+function formatDateShort(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString('no-NO', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+export function getPersonalRecords(activities: StravaActivity[]): PersonalRecord[] {
+  if (activities.length === 0) return []
+
+  const longest = activities.reduce((a, b) => a.distance > b.distance ? a : b)
+  const mostElevation = activities.reduce((a, b) =>
+    a.total_elevation_gain > b.total_elevation_gain ? a : b
+  )
+  const fastestPace = activities.reduce((a, b) =>
+    a.average_pace < b.average_pace ? a : b
+  )
+
+  const withCalories = activities.filter((a) => a.calories !== undefined)
+  const mostCalories = withCalories.length > 0
+    ? withCalories.reduce((a, b) => (a.calories ?? 0) > (b.calories ?? 0) ? a : b)
+    : null
+
+  const withHR = activities.filter((a) => a.max_heartrate !== undefined)
+  const highestHR = withHR.length > 0
+    ? withHR.reduce((a, b) => (a.max_heartrate ?? 0) > (b.max_heartrate ?? 0) ? a : b)
+    : null
+
+  const records: PersonalRecord[] = [
+    {
+      label: 'Lengste løpetur',
+      value: `${(longest.distance / 1000).toFixed(1)} km`,
+      activityName: longest.name,
+      date: formatDateShort(longest.start_date),
+      icon: 'ti-arrow-up-right',
+    },
+    {
+      label: 'Mest høydemeter',
+      value: `${mostElevation.total_elevation_gain}m`,
+      activityName: mostElevation.name,
+      date: formatDateShort(mostElevation.start_date),
+      icon: 'ti-mountain',
+    },
+    {
+      label: 'Raskeste snittempo',
+      value: (() => {
+        const mins = Math.floor(fastestPace.average_pace / 60)
+        const secs = fastestPace.average_pace % 60
+        return `${mins}:${secs.toString().padStart(2, '0')} /km`
+      })(),
+      activityName: fastestPace.name,
+      date: formatDateShort(fastestPace.start_date),
+      icon: 'ti-bolt',
+    },
+  ]
+
+  if (mostCalories) {
+    records.push({
+      label: 'Høyest kalorier',
+      value: `${mostCalories.calories} kcal`,
+      activityName: mostCalories.name,
+      date: formatDateShort(mostCalories.start_date),
+      icon: 'ti-flame',
+    })
+  }
+
+  if (highestHR) {
+    records.push({
+      label: 'Høyeste puls',
+      value: `${highestHR.max_heartrate} bpm`,
+      activityName: highestHR.name,
+      date: formatDateShort(highestHR.start_date),
+      icon: 'ti-heart',
+    })
+  }
+
+  return records
+}
